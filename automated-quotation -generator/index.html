@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construction Quotation Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section, .preview-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            font-size: 14px;
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--light);
+            font-size: 1.3rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-download {
+            background: var(--success);
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            font-size: 16px;
+        }
+        
+        .btn-download:hover {
+            background: #27ae60;
+        }
+        
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .quotation-preview {
+            flex-grow: 1;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            min-height: 400px;
+            font-size: 14px;
+        }
+        
+        .company-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .company-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .company-tagline {
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+        
+        .quotation-title {
+            text-align: center;
+            margin: 12px 0;
+            color: var(--dark);
+            font-size: 18px;
+        }
+        
+        .client-info, .project-info {
+            margin-bottom: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .materials-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        .materials-list th {
+            background-color: var(--light);
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 13px;
+        }
+        
+        .materials-list td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        
+        .materials-list tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .total-row {
+            font-weight: 700;
+            background-color: #f9f9f9;
+        }
+        
+        .notes {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+        
+        .calculation-summary {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .summary-label {
+            font-weight: 600;
+        }
+        
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .pdf-preview {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Construction Quotation Generator</h1>
+            <p class="subtitle">Automated estimates for construction projects</p>
+        </header>
+        
+        <div class="alert alert-success" id="successAlert">
+            Quotation generated successfully! Click the download button to save as PDF.
+        </div>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Project Details</h2>
+                
+                <div class="form-group">
+                    <label for="projectType">Project Type</label>
+                    <select id="projectType">
+                        <option value="cricket">Cricket Ground</option>
+                        <option value="football">Football Field</option>
+                        <option value="park">Public Park</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="area">Area (Square Meters)</label>
+                    <input type="number" id="area" placeholder="Enter area in square meters" min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clientName">Client Name</label>
+                    <input type="text" id="clientName" placeholder="Enter client name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="projectLocation">Project Location</label>
+                    <input type="text" id="projectLocation" placeholder="Enter project location">
+                </div>
+                
+                <h2 class="section-title">Material Costs</h2>
+                
+                <div class="form-group">
+                    <label for="sandCost">Sand Cost (per cubic meter)</label>
+                    <input type="number" id="sandCost" placeholder="Enter cost per cubic meter" min="1" value="50">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cementCost">Cement Cost (per bag)</label>
+                    <input type="number" id="cementCost" placeholder="Enter cost per bag" min="1" value="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="brickCost">Brick Cost (per 1000 bricks)</label>
+                    <input type="number" id="brickCost" placeholder="Enter cost per 1000 bricks" min="1" value="400">
+                </div>
+                
+                <div class="form-group">
+                    <label for="grassCost">Grass Mat Cost (per square meter)</label>
+                    <input type="number" id="grassCost" placeholder="Enter cost per square meter" min="1" value="15">
+                </div>
+                
+                <button class="btn" id="generateBtn">Generate Quotation</button>
+                
+                <div class="calculation-summary" id="calculationSummary">
+                    <h3>Calculation Summary</h3>
+                    <div class="summary-item">
+                        <span class="summary-label">Sand Required:</span>
+                        <span id="sandRequired">0 cubic meters</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Cement Required:</span>
+                        <span id="cementRequired">0 bags</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Bricks Required:</span>
+                        <span id="bricksRequired">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Grass Mats Required:</span>
+                        <span id="grassRequired">0 square meters</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Labor Required:</span>
+                        <span id="laborRequired">0 workers</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="preview-section">
+                <h2 class="section-title">Quotation Preview</h2>
+                
+                <div class="quotation-preview" id="quotationPreview">
+                    <div class="company-header">
+                        <div class="company-name">Nexora group</div>
+                        <div class="company-tagline">Quality Construction Since 2025</div>
+                    </div>
+                    
+                    <h2 class="quotation-title">QUOTATION</h2>
+                    
+                    <div class="client-info">
+                        <div class="info-row">
+                            <span class="info-label">Client:</span>
+                            <span id="previewClient">[Client Name]</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Project:</span>
+                            <span id="previewProject">[Project Type]</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Location:</span>
+                            <span id="previewLocation">[Project Location]</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Date:</span>
+                            <span id="previewDate">[Current Date]</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Quotation #:</span>
+                            <span>BR-2023-001</span>
+                        </div>
+                    </div>
+                    
+                    <table class="materials-list">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sand</td>
+                                <td id="previewSandQty">0 cubic meters</td>
+                                <td id="previewSandPrice">$0</td>
+                                <td id="previewSandTotal">$0</td>
+                            </tr>
+                            <tr>
+                                <td>Cement</td>
+                                <td id="previewCementQty">0 bags</td>
+                                <td id="previewCementPrice">$0</td>
+                                <td id="previewCementTotal">$0</td>
+                            </tr>
+                            <tr>
+                                <td>Bricks</td>
+                                <td id="previewBricksQty">0</td>
+                                <td id="previewBricksPrice">$0</td>
+                                <td id="previewBricksTotal">$0</td>
+                            </tr>
+                            <tr>
+                                <td>Grass Mats</td>
+                                <td id="previewGrassQty">0 square meters</td>
+                                <td id="previewGrassPrice">$0</td>
+                                <td id="previewGrassTotal">$0</td>
+                            </tr>
+                            <tr>
+                                <td>Labor</td>
+                                <td id="previewLaborQty">0 workers</td>
+                                <td id="previewLaborPrice">$0</td>
+                                <td id="previewLaborTotal">$0</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td colspan="3">TOTAL</td>
+                                <td id="previewTotal">$0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="notes">
+                        <p><strong>Notes:</strong></p>
+                        <p>1. This quotation is valid for 30 days from the date of issue.</p>
+                        <p>2. Prices are subject to change based on market fluctuations.</p>
+                        <p>3. Additional charges may apply for site-specific conditions.</p>
+                    </div>
+                </div>
+                
+                <button class="btn btn-download" id="downloadBtn">Download Quotation as PDF</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Nexora group &copy; 2025 | Quotation Generator v1.0</p>
+        </footer>
+    </div>
+
+    <!-- Hidden div for PDF generation with proper styling -->
+    <div id="pdfContent" class="pdf-preview"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const currentDate = new Date();
+            const formattedDate = currentDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('previewDate').textContent = formattedDate;
+            
+            // Generate quotation button
+            document.getElementById('generateBtn').addEventListener('click', generateQuotation);
+            
+            // Download button
+            document.getElementById('downloadBtn').addEventListener('click', downloadPDF);
+            
+            function generateQuotation() {
+                // Get input values
+                const area = parseFloat(document.getElementById('area').value);
+                const projectType = document.getElementById('projectType').value;
+                const clientName = document.getElementById('clientName').value;
+                const projectLocation = document.getElementById('projectLocation').value;
+                const sandCost = parseFloat(document.getElementById('sandCost').value);
+                const cementCost = parseFloat(document.getElementById('cementCost').value);
+                const brickCost = parseFloat(document.getElementById('brickCost').value);
+                const grassCost = parseFloat(document.getElementById('grassCost').value);
+                
+                // Validate inputs
+                if (!area || area <= 0) {
+                    alert('Please enter a valid area');
+                    return;
+                }
+                
+                if (!clientName) {
+                    alert('Please enter client name');
+                    return;
+                }
+                
+                // Calculate material requirements based on area
+                // These are example calculations - adjust based on actual construction requirements
+                const sandRequired = Math.ceil(area * 0.1); // 0.1 cubic meters per square meter
+                const cementRequired = Math.ceil(area * 0.05); // 0.05 bags per square meter
+                const bricksRequired = Math.ceil(area * 10); // 10 bricks per square meter
+                const grassRequired = Math.ceil(area * 1.1); // 10% extra for cutting
+                const laborRequired = Math.ceil(area / 50); // 1 worker per 50 square meters
+                
+                // Calculate costs
+                const sandTotal = sandRequired * sandCost;
+                const cementTotal = cementRequired * cementCost;
+                const bricksTotal = (bricksRequired / 1000) * brickCost;
+                const grassTotal = grassRequired * grassCost;
+                const laborTotal = laborRequired * 80 * 5; // 5 days at $80 per day per worker
+                
+                const totalCost = sandTotal + cementTotal + bricksTotal + grassTotal + laborTotal;
+                
+                // Update calculation summary
+                document.getElementById('sandRequired').textContent = sandRequired + ' cubic meters';
+                document.getElementById('cementRequired').textContent = cementRequired + ' bags';
+                document.getElementById('bricksRequired').textContent = bricksRequired.toLocaleString();
+                document.getElementById('grassRequired').textContent = grassRequired + ' square meters';
+                document.getElementById('laborRequired').textContent = laborRequired + ' workers';
+                
+                // Update preview
+                document.getElementById('previewClient').textContent = clientName;
+                document.getElementById('previewProject').textContent = document.getElementById('projectType').options[document.getElementById('projectType').selectedIndex].text;
+                document.getElementById('previewLocation').textContent = projectLocation;
+                
+                document.getElementById('previewSandQty').textContent = sandRequired + ' cubic meters';
+                document.getElementById('previewSandPrice').textContent = '$' + sandCost.toFixed(2);
+                document.getElementById('previewSandTotal').textContent = '$' + sandTotal.toFixed(2);
+                
+                document.getElementById('previewCementQty').textContent = cementRequired + ' bags';
+                document.getElementById('previewCementPrice').textContent = '$' + cementCost.toFixed(2);
+                document.getElementById('previewCementTotal').textContent = '$' + cementTotal.toFixed(2);
+                
+                document.getElementById('previewBricksQty').textContent = bricksRequired.toLocaleString();
+                document.getElementById('previewBricksPrice').textContent = '$' + (brickCost/1000).toFixed(2) + ' per brick';
+                document.getElementById('previewBricksTotal').textContent = '$' + bricksTotal.toFixed(2);
+                
+                document.getElementById('previewGrassQty').textContent = grassRequired + ' square meters';
+                document.getElementById('previewGrassPrice').textContent = '$' + grassCost.toFixed(2);
+                document.getElementById('previewGrassTotal').textContent = '$' + grassTotal.toFixed(2);
+                
+                document.getElementById('previewLaborQty').textContent = laborRequired + ' workers';
+                document.getElementById('previewLaborPrice').textContent = '$400 per worker (5 days)';
+                document.getElementById('previewLaborTotal').textContent = '$' + laborTotal.toFixed(2);
+                
+                document.getElementById('previewTotal').textContent = '$' + totalCost.toFixed(2);
+                
+                // Show success message
+                document.getElementById('successAlert').style.display = 'block';
+            }
+            
+            function downloadPDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                // Set font size for the entire document (12px ≈ 3.5mm in PDF)
+                doc.setFontSize(10);
+                
+                // Get values for PDF
+                const clientName = document.getElementById('clientName').value || 'Client';
+                const projectType = document.getElementById('projectType').options[document.getElementById('projectType').selectedIndex].text;
+                const projectLocation = document.getElementById('projectLocation').value || 'Location';
+                const currentDate = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // Company header
+                doc.setFontSize(16);
+                doc.setTextColor(44, 62, 80);
+                doc.text('Nexora group', 105, 20, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setTextColor(127, 140, 141);
+                doc.text('Quality Construction Since 2025', 105, 26, { align: 'center' });
+                
+                // Quotation title
+                doc.setFontSize(14);
+                doc.setTextColor(0, 0, 0);
+                doc.text('QUOTATION', 105, 35, { align: 'center' });
+                
+                // Client and project info
+                doc.setFontSize(10);
+                let yPosition = 45;
+                doc.text(`Client: ${clientName}`, 20, yPosition);
+                doc.text(`Project: ${projectType}`, 20, yPosition + 6);
+                doc.text(`Location: ${projectLocation}`, 20, yPosition + 12);
+                doc.text(`Date: ${currentDate}`, 20, yPosition + 18);
+                doc.text(`Quotation #: BR-2023-001`, 20, yPosition + 24);
+                
+                // Table headers
+                yPosition = 80;
+                doc.setFillColor(236, 240, 241);
+                doc.rect(20, yPosition - 5, 170, 7, 'F');
+                doc.text('Item', 20, yPosition);
+                doc.text('Quantity', 70, yPosition);
+                doc.text('Unit Price', 110, yPosition);
+                doc.text('Total', 160, yPosition);
+                
+                // Table data
+                yPosition += 10;
+                
+                // Sand
+                doc.text('Sand', 20, yPosition);
+                doc.text(document.getElementById('previewSandQty').textContent, 70, yPosition);
+                doc.text(document.getElementById('previewSandPrice').textContent, 110, yPosition);
+                doc.text(document.getElementById('previewSandTotal').textContent, 160, yPosition);
+                yPosition += 6;
+                
+                // Cement
+                doc.text('Cement', 20, yPosition);
+                doc.text(document.getElementById('previewCementQty').textContent, 70, yPosition);
+                doc.text(document.getElementById('previewCementPrice').textContent, 110, yPosition);
+                doc.text(document.getElementById('previewCementTotal').textContent, 160, yPosition);
+                yPosition += 6;
+                
+                // Bricks
+                doc.text('Bricks', 20, yPosition);
+                doc.text(document.getElementById('previewBricksQty').textContent, 70, yPosition);
+                doc.text(document.getElementById('previewBricksPrice').textContent, 110, yPosition);
+                doc.text(document.getElementById('previewBricksTotal').textContent, 160, yPosition);
+                yPosition += 6;
+                
+                // Grass Mats
+                doc.text('Grass Mats', 20, yPosition);
+                doc.text(document.getElementById('previewGrassQty').textContent, 70, yPosition);
+                doc.text(document.getElementById('previewGrassPrice').textContent, 110, yPosition);
+                doc.text(document.getElementById('previewGrassTotal').textContent, 160, yPosition);
+                yPosition += 6;
+                
+                // Labor
+                doc.text('Labor', 20, yPosition);
+                doc.text(document.getElementById('previewLaborQty').textContent, 70, yPosition);
+                doc.text(document.getElementById('previewLaborPrice').textContent, 110, yPosition);
+                doc.text(document.getElementById('previewLaborTotal').textContent, 160, yPosition);
+                yPosition += 10;
+                
+                // Total
+                doc.setFillColor(249, 249, 249);
+                doc.rect(20, yPosition - 5, 170, 7, 'F');
+                doc.setFont(undefined, 'bold');
+                doc.text('TOTAL', 20, yPosition);
+                doc.text(document.getElementById('previewTotal').textContent, 160, yPosition);
+                doc.setFont(undefined, 'normal');
+                
+                // Notes
+                yPosition += 15;
+                doc.setFont(undefined, 'bold');
+                doc.text('Notes:', 20, yPosition);
+                doc.setFont(undefined, 'normal');
+                yPosition += 6;
+                doc.text('1. This quotation is valid for 30 days from the date of issue.', 20, yPosition);
+                yPosition += 5;
+                doc.text('2. Prices are subject to change based on market fluctuations.', 20, yPosition);
+                yPosition += 5;
+                doc.text('3. Additional charges may apply for site-specific conditions.', 20, yPosition);
+                
+                // Save the PDF
+                const fileName = `quotation-${projectType.toLowerCase()}-${clientName.replace(/\s+/g, '-')}.pdf`;
+                doc.save(fileName);
+            }
+        });
+    </script>
+</body>
+</html>
